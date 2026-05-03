@@ -1,0 +1,9 @@
+[build]
+  publish = "."
+
+[[edge_functions]]
+  path = "/sendPush"
+  function = "sendPush"
+
+[build.environment]
+  EDGE_FUNCTIONS_SRC = "netlify/edge-functions"
