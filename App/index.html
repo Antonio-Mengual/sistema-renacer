@@ -1,0 +1,412 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0D1B2A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Sistema Renacer</title>
+<link rel="apple-touch-icon" href="Logo.png">
+<link rel="icon" type="image/png" href="Logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&family=Lato:wght@300;400;700&display=swap" rel="stylesheet">
+<script src="https://cdn.onesignal.com/sdks/web/v16/OneSignalSDK.page.js" defer></script>
+<script>
+window.OneSignalDeferred=window.OneSignalDeferred||[];
+OneSignalDeferred.push(async function(OS){
+  await OS.init({appId:"3992a7f8-19ac-41b2-9db4-8b67f181f5da",notifyButton:{enable:false}});
+  window._osReady=true;
+  try{
+    await OS.Notifications.requestPermission();
+  }catch(e){}
+  try{
+    const id=OS.User.PushSubscription.id;
+    if(id)window._myPid=id;
+    OS.User.PushSubscription.addEventListener('change',e=>{
+      window._myPid=e.current.id;
+      if(window._pairCode)_savePlayerId(e.current.id);
+    });
+  }catch(e){}
+});
+</script>
+<script type="module">
+import{initializeApp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import{getFirestore,doc,onSnapshot,setDoc,getDoc,updateDoc,arrayUnion,serverTimestamp}from"https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+const app=initializeApp({apiKey:"AIzaSyBhkSTrtQ_jsath9RnOlDJrrNQ0nIslX5A",authDomain:"sistema-renacer.firebaseapp.com",projectId:"sistema-renacer",storageBucket:"sistema-renacer.firebasestorage.app",messagingSenderId:"19527513028",appId:"1:19527513028:web:21f00e1d57ec597577aa91"});
+const db=getFirestore(app);
+window._fb={doc:(c,id)=>doc(db,c,id),onSnapshot,setDoc,getDoc,updateDoc,arrayUnion,serverTimestamp};
+window._fbReady=true;
+window.dispatchEvent(new Event('fbReady'));
+</script>
+<style>
+:root{--nv:#0D1B2A;--nl:#162032;--nm:#1E2D42;--go:#C9A84C;--gl:#E2C06A;--gd:#8A6E2F;--cr:#F5EDD8;--cd:#C8BEA8;--gn:#3D9970;--rl:#E74C3C;}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:16px;-webkit-text-size-adjust:100%}
+body{background:var(--nv);color:var(--cr);font-family:'Lato',sans-serif;min-height:100dvh;overflow-x:hidden;-webkit-font-smoothing:antialiased}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:var(--nm)}::-webkit-scrollbar-thumb{background:var(--gd);border-radius:2px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(22px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes drop{0%{opacity:0;transform:translateX(-50%) translateY(-16px) scale(.92)}60%{transform:translateX(-50%) translateY(3px) scale(1.02)}100%{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}}
+@keyframes swL{to{transform:translateX(-130%) rotate(-18deg);opacity:0}}
+@keyframes swR{to{transform:translateX(130%) rotate(18deg);opacity:0}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+@keyframes glow{0%,100%{box-shadow:0 0 0 0 rgba(201,168,76,.4)}50%{box-shadow:0 0 0 10px rgba(201,168,76,0)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes cIn{from{opacity:0;transform:scale(.94) translateY(10px)}to{opacity:1;transform:scale(1) translateY(0)}}
+#ps{position:fixed;inset:0;z-index:200;background:var(--nv);display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;animation:fadeIn .4s ease}
+.ps-logo{width:80px;height:80px;border-radius:50%;border:2px solid rgba(201,168,76,.35);overflow:hidden;background:rgba(201,168,76,.08);display:flex;align-items:center;justify-content:center;margin-bottom:20px;font-size:32px}
+.ps-logo img{width:100%;height:100%;object-fit:cover}
+.ps-ttl{font-family:'Playfair Display',serif;font-size:28px;font-weight:700;background:linear-gradient(135deg,var(--cr),var(--go));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;text-align:center;margin-bottom:8px}
+.ps-sub{color:var(--cd);font-size:13px;text-align:center;line-height:1.65;margin-bottom:28px;max-width:300px}
+.ps-in{width:100%;max-width:320px;background:var(--nm);border:1.5px solid rgba(201,168,76,.3);border-radius:12px;color:var(--cr);font-size:20px;padding:16px 18px;font-family:'Lato',sans-serif;outline:none;text-align:center;letter-spacing:.1em;text-transform:uppercase;transition:border-color .2s;margin-bottom:10px}
+.ps-in:focus{border-color:var(--go)}
+.ps-in::placeholder{color:var(--cd);font-size:13px;letter-spacing:.02em;text-transform:none}
+.ps-err{font-size:12px;color:var(--rl);text-align:center;min-height:18px;margin-bottom:10px}
+.ps-fb{display:inline-flex;align-items:center;gap:6px;margin-top:18px;background:rgba(61,153,112,.1);border:1px solid rgba(61,153,112,.25);border-radius:20px;padding:5px 14px;font-size:11px;color:var(--gn);opacity:0;transition:opacity .4s}
+.ps-dot{width:7px;height:7px;border-radius:50%;background:var(--gn);animation:pulse 1.5s ease infinite}
+.app{max-width:480px;margin:0 auto;min-height:100dvh;padding-bottom:90px}
+.hdr{padding:16px 18px 0;background:linear-gradient(180deg,var(--nv) 80%,transparent);position:sticky;top:0;z-index:100;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:3px}
+.b-lbl{font-size:9px;color:var(--go);font-weight:700;letter-spacing:.14em;text-transform:uppercase;margin-bottom:2px}
+.b-ttl{font-family:'Playfair Display',serif;font-size:24px;font-weight:700;background:linear-gradient(135deg,var(--cr),var(--go));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;line-height:1.1}
+.hdr-r{display:flex;align-items:center;gap:10px}
+.cbadge{background:rgba(201,168,76,.1);border:1px solid rgba(201,168,76,.25);border-radius:8px;padding:4px 9px;font-size:10px;color:var(--go);font-weight:700;letter-spacing:.08em;cursor:pointer;display:flex;align-items:center;gap:5px}
+.logo{width:40px;height:40px;border-radius:50%;border:1.5px solid rgba(201,168,76,.35);overflow:hidden;background:rgba(201,168,76,.1);display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0}
+.logo img{width:100%;height:100%;object-fit:cover}
+.hdr-sub{color:var(--cd);font-size:11px;margin-bottom:12px;letter-spacing:.02em}
+.tabs{display:flex;background:var(--nm);border-radius:14px;padding:4px;gap:2px;margin-bottom:2px}
+.tab{flex:1;padding:8px 2px;border-radius:10px;border:none;background:transparent;color:var(--cd);cursor:pointer;transition:all .25s;display:flex;flex-direction:column;align-items:center;gap:2px;font-family:'Lato',sans-serif;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.tab.on{background:linear-gradient(135deg,var(--go),var(--gl));color:var(--nv)}
+.t-ic{font-size:15px}.t-lb{font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+main{padding:18px 18px 0}
+.sec{animation:fadeUp .45s ease both}
+.st{margin-bottom:22px}
+.st-row{display:flex;align-items:center;gap:10px;margin-bottom:5px}
+.st-ic{font-size:22px}
+.st h2{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--cr);letter-spacing:-.01em}
+.ssub{color:var(--cd);font-size:12px;line-height:1.6;padding-left:32px}
+.ctx{background:linear-gradient(135deg,rgba(201,168,76,.08),rgba(201,168,76,.03));border:1px solid rgba(201,168,76,.2);border-left:3px solid var(--go);border-radius:10px;padding:12px 14px;margin:12px 0 16px;font-size:12px;line-height:1.65;color:var(--cd)}
+.ctx strong{color:var(--go)}
+.divx{display:flex;align-items:center;gap:10px;margin:14px 0}
+.divx::before,.divx::after{content:'';flex:1;height:1px}
+.divx::before{background:linear-gradient(to right,transparent,var(--gd))}
+.divx::after{background:linear-gradient(to left,transparent,var(--gd))}
+.divx span{width:5px;height:5px;background:var(--go);transform:rotate(45deg);flex-shrink:0}
+.card{background:var(--nl);border:1px solid rgba(201,168,76,.15);border-radius:18px;padding:22px 18px;box-shadow:0 8px 36px rgba(0,0,0,.4);margin-bottom:16px}
+.btn{background:var(--go);color:var(--nv);font-family:'Lato',sans-serif;font-weight:700;font-size:12px;letter-spacing:.07em;text-transform:uppercase;padding:13px 22px;border-radius:10px;border:none;cursor:pointer;transition:all .2s;-webkit-tap-highlight-color:transparent;touch-action:manipulation;display:inline-block;text-align:center}
+.btn:active{transform:scale(.97)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn.out{background:transparent;border:1.5px solid var(--go);color:var(--go)}
+.btn.w{width:100%}
+.btn.sm{padding:9px 16px;font-size:11px}
+.toast{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:9999;background:linear-gradient(135deg,var(--go),var(--gl));color:var(--nv);border-radius:14px;padding:14px 18px;width:calc(100% - 36px);max-width:420px;box-shadow:0 12px 40px rgba(201,168,76,.4);display:flex;gap:10px;align-items:flex-start;animation:drop .5s cubic-bezier(.34,1.56,.64,1) both}
+.toast-x{background:none;border:none;cursor:pointer;font-size:18px;color:var(--nv);margin-left:auto;flex-shrink:0;padding:0;line-height:1}
+.sync{display:flex;align-items:center;justify-content:center;gap:6px;padding:6px 0 10px;font-size:10px;color:var(--gd)}
+.spinx{width:10px;height:10px;border:1.5px solid var(--gd);border-top-color:var(--go);border-radius:50%;animation:spin .6s linear infinite}
+.qt{margin:28px 0 8px;padding:20px 22px;background:linear-gradient(135deg,var(--nm),var(--nl));border:1px solid rgba(201,168,76,.2);border-left:4px solid var(--go);border-radius:14px;animation:fadeUp .6s ease .3s both}
+.qt .qd{font-size:24px;color:var(--go);margin-bottom:8px}
+.qt p{font-family:'Playfair Display',serif;font-size:14px;font-style:italic;color:var(--cr);line-height:1.7}
+.scores{display:flex;gap:10px;margin-bottom:18px}
+.sc{flex:1;background:var(--nl);border:1px solid rgba(201,168,76,.15);border-radius:14px;padding:14px 10px;text-align:center}
+.sc-n{font-family:'Playfair Display',serif;font-size:30px;color:var(--go);font-weight:700;line-height:1}
+.sc-l{font-size:10px;color:var(--cd);text-transform:uppercase;letter-spacing:.07em;margin-top:3px}
+.prx{display:flex;justify-content:space-between;margin-bottom:5px}
+.prx span{font-size:11px;color:var(--cd)}
+.prx span:last-child{color:var(--go)}
+.pw{height:3px;background:rgba(201,168,76,.15);border-radius:2px;margin-bottom:18px}
+.pf{height:100%;background:var(--go);border-radius:2px;transition:width .4s}
+.tr{display:flex;align-items:center;justify-content:space-between;background:rgba(201,168,76,.07);border:1px solid rgba(201,168,76,.2);border-radius:12px;padding:10px 16px;margin-bottom:16px}
+.td{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--go);letter-spacing:.04em}
+.td.urg{color:var(--rl);animation:pulse .8s ease infinite}
+.tl{font-size:10px;color:var(--cd);text-transform:uppercase;letter-spacing:.08em}
+.fw{perspective:1000px;margin-bottom:20px}
+.fc{width:100%;min-height:190px;border-radius:18px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:34px 24px;text-align:center;transition:background .4s,border-color .4s,box-shadow .4s;position:relative;-webkit-tap-highlight-color:transparent;touch-action:manipulation;user-select:none}
+.fc.hid{background:linear-gradient(135deg,var(--nm),var(--nl));border:1px solid rgba(201,168,76,.2);box-shadow:0 8px 36px rgba(0,0,0,.5)}
+.fc.rev{background:linear-gradient(135deg,var(--go),var(--gl));border:1px solid var(--go);box-shadow:0 16px 56px rgba(201,168,76,.3);animation:cIn .35s ease}
+.fc.sl{animation:swL .55s ease forwards}
+.fc.sr{animation:swR .55s ease forwards}
+.pts{position:absolute;top:14px;right:14px;padding:3px 10px;border-radius:20px;font-size:10px;font-weight:700;letter-spacing:.05em}
+.pts.hid{background:rgba(201,168,76,.15);color:var(--go)}
+.pts.rev{background:rgba(13,27,42,.25);color:var(--nv)}
+.ch{font-size:13px;color:var(--cd);letter-spacing:.03em}
+.cq{font-family:'Playfair Display',serif;font-size:18px;font-weight:600;color:var(--nv);line-height:1.55}
+.ci{font-size:32px;margin-bottom:10px}
+.ab{display:flex;gap:10px;margin-bottom:14px}
+.ab .btn{flex:1}
+.fbx{border-radius:10px;padding:11px 14px;text-align:center;font-size:13px;font-weight:700;margin-bottom:14px;animation:fadeUp .3s ease}
+.fbx.ok{background:rgba(61,153,112,.18);border:1px solid var(--gn);color:var(--gn)}
+.fbx.no{background:rgba(192,57,43,.15);border:1px solid var(--rl);color:var(--rl)}
+.qb{margin-bottom:16px;padding:14px;background:rgba(201,168,76,.05);border-radius:12px;border:1px solid rgba(201,168,76,.15)}
+.qb-r{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.qn{width:22px;height:22px;background:var(--go);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--nv);flex-shrink:0}
+.qi{flex:1;background:none;border:none;border-bottom:1px solid var(--gd);color:var(--cr);font-size:13px;padding:4px 0;font-family:'Lato',sans-serif;outline:none;width:100%}
+.qi::placeholder{color:var(--cd)}
+.mi{width:100%;background:rgba(30,45,66,.8);border:1px solid rgba(201,168,76,.18);border-radius:8px;color:var(--cd);font-size:11px;padding:9px 11px;font-family:'Lato',sans-serif;resize:none;outline:none;line-height:1.5}
+.mi::placeholder{color:rgba(200,190,168,.5)}
+.hl{font-family:'Playfair Display',serif;color:var(--go);font-size:14px;margin-bottom:12px;letter-spacing:.03em}
+.hc{background:var(--nl);border:1px solid rgba(201,168,76,.12);border-radius:14px;padding:14px 16px;margin-bottom:10px}
+.hd{font-size:10px;color:var(--gd);text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px}
+.pills{display:flex;gap:6px;flex-wrap:wrap}
+.pill{background:rgba(201,168,76,.12);border:1px solid rgba(201,168,76,.25);border-radius:20px;padding:4px 11px;font-size:11px;color:var(--cr)}
+.rn{font-family:'Playfair Display',serif;font-size:58px;font-weight:700;line-height:1;transition:color .4s}
+.rs{font-size:11px;color:var(--cd);margin-top:5px;letter-spacing:.05em;text-transform:uppercase}
+.rbw{position:relative;height:10px;background:rgba(192,57,43,.25);border-radius:6px;margin:16px 0 6px;overflow:hidden}
+.rbf{position:absolute;left:0;top:0;height:100%;background:linear-gradient(to right,var(--gn),var(--go));border-radius:6px;transition:width .5s cubic-bezier(.34,1.56,.64,1)}
+.rbm{position:absolute;top:0;left:83.3%;height:100%;width:2px;background:rgba(245,237,216,.5)}
+.rbl{display:flex;justify-content:space-between;font-size:9px;color:var(--cd)}
+.rbl span:nth-child(2){color:var(--go)}
+.rp{display:inline-block;border-radius:20px;padding:6px 18px;font-size:11px;font-weight:700;letter-spacing:.05em;margin:14px 0 20px}
+.rp.g{background:rgba(61,153,112,.18);border:1px solid var(--gn);color:var(--gn)}
+.rp.r{background:rgba(192,57,43,.15);border:1px solid var(--rl);color:var(--rl)}
+.rp.a{background:rgba(201,168,76,.15);border:1px solid var(--go);color:var(--go)}
+.cr2{display:flex;gap:12px;margin-bottom:20px}
+.cn{flex:1;border-radius:14px;padding:14px 10px;text-align:center}
+.cn.d{background:rgba(61,153,112,.1);border:1px solid rgba(61,153,112,.25)}
+.cn.w{background:rgba(192,57,43,.1);border:1px solid rgba(192,57,43,.25)}
+.ci2{font-size:22px;margin-bottom:3px}
+.cnn{font-family:'Playfair Display',serif;font-size:34px;font-weight:700;line-height:1}
+.cnn.d{color:var(--gn)}.cnn.w{color:var(--rl)}
+.cnl{font-size:10px;color:var(--cd);text-transform:uppercase;letter-spacing:.06em;margin-top:2px}
+.cbs{display:flex;gap:10px}
+.cb{flex:1;padding:14px;border-radius:12px;border:none;font-weight:700;font-size:12px;cursor:pointer;font-family:'Lato',sans-serif;letter-spacing:.05em;transition:all .2s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.cb:active{transform:scale(.94)}
+.cb.d{background:rgba(61,153,112,.18);border:1.5px solid var(--gn);color:var(--gn)}
+.cb.w{background:rgba(192,57,43,.13);border:1.5px solid var(--rl);color:var(--rl)}
+.et{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:12px}
+.er{display:flex;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid rgba(201,168,76,.08)}
+.er:last-child{border-bottom:none}
+.er span:first-child{font-size:17px}
+.er span:last-child{font-size:12px;color:var(--cd)}
+.spr{display:flex;gap:10px;justify-content:center;margin-bottom:18px}
+.sp{flex:1;max-width:140px;padding:12px 14px;border-radius:12px;border:1.5px solid transparent;text-align:center;transition:all .3s}
+.sp.on{background:rgba(201,168,76,.12);border-color:var(--go)}
+.sp:not(.on){border-color:rgba(201,168,76,.15)}
+.sp-ic{font-size:20px;margin-bottom:3px}
+.sp-nm{font-size:12px;font-weight:700}
+.sp-nm.on{color:var(--go)}
+.sp-nm:not(.on){color:var(--cd)}
+.sp-rl{font-size:10px;color:var(--cd);margin-top:1px}
+.tcw{width:152px;height:152px;margin:0 auto 18px;position:relative;display:flex;align-items:center;justify-content:center}
+.tcs{position:absolute;top:0;left:0;transform:rotate(-90deg)}
+.tci{width:130px;height:130px;background:var(--nl);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:1}
+.tct{font-family:'Playfair Display',serif;font-size:34px;font-weight:700;line-height:1;transition:color .3s}
+.tct.on{color:var(--go);animation:glow 2s ease infinite}
+.tct.urg{color:var(--rl)}
+.tcu{font-size:9px;color:var(--cd);text-transform:uppercase;letter-spacing:.08em}
+.tcb{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:20px}
+.ec{background:linear-gradient(135deg,rgba(201,168,76,.12),rgba(201,168,76,.04));border:1px solid rgba(201,168,76,.3);border-radius:14px;padding:22px 18px;text-align:center;cursor:pointer;margin-bottom:14px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+.ep{font-family:'Playfair Display',serif;font-size:17px;font-style:italic;color:var(--cr);line-height:1.55}
+.eh{font-size:9px;color:var(--gd);margin-top:10px;text-transform:uppercase;letter-spacing:.08em}
+.rule{border-top:1px solid rgba(201,168,76,.12);padding-top:12px;font-size:12px;color:var(--cd);line-height:1.6}
+.rule strong{color:var(--go)}
+.done{text-align:center}
+.done-ic{font-size:40px;margin-bottom:10px}
+.done-t{font-family:'Playfair Display',serif;color:var(--go);font-size:18px;margin-bottom:14px}
+#pr{position:fixed;inset:0;z-index:190;background:var(--nv);display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;animation:fadeIn .4s ease}
+.pr-ttl{font-family:'Playfair Display',serif;font-size:22px;font-weight:700;color:var(--cr);text-align:center;margin-bottom:8px}
+.pr-sub{color:var(--cd);font-size:13px;text-align:center;line-height:1.65;margin-bottom:32px;max-width:300px}
+.pr-btns{display:flex;flex-direction:column;gap:14px;width:100%;max-width:320px}
+.pr-btn{background:var(--nm);border:1.5px solid rgba(201,168,76,.3);border-radius:14px;padding:20px 18px;cursor:pointer;text-align:center;transition:all .2s;-webkit-tap-highlight-color:transparent}
+.pr-btn:active{transform:scale(.97)}
+.pr-btn-ic{font-size:28px;margin-bottom:6px}
+.pr-btn-lbl{font-family:'Playfair Display',serif;font-size:16px;color:var(--cr);font-weight:600}
+.pr-btn-sub{font-size:11px;color:var(--cd);margin-top:3px}
+</style>
+</head>
+<body>
+<div id="ps">
+  <div class="ps-logo"><img src="Logo.png" alt="Logo"></div>
+  <div class="ps-ttl">Sistema RENACER</div>
+  <div class="ps-sub">Introduce el código de pareja que te dio tu terapeuta para vincular vuestros dos dispositivos en tiempo real.</div>
+  <input class="ps-in" id="ps-in" type="text" maxlength="12" placeholder="Ej: RENACER01" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')" onkeydown="if(event.key==='Enter')doEnter()">
+  <div class="ps-err" id="ps-err"></div>
+  <button class="btn w" style="max-width:320px" onclick="doEnter()">Conectar con mi pareja →</button>
+  <div class="ps-fb" id="ps-fb"><div class="ps-dot"></div><span id="ps-fb-t">Conectando…</span></div>
+</div>
+<div id="pr">
+  <div class="ps-logo"><img src="Logo.png" alt="Logo"></div>
+  <div class="pr-ttl">¿Quién eres tú?</div>
+  <div class="pr-sub">Elige tu rol en la pareja. Cada uno debe elegir uno diferente.</div>
+  <div class="pr-btns">
+    <div class="pr-btn" onclick="chooseRole('p1')">
+      <div class="pr-btn-ic">🌹</div>
+      <div class="pr-btn-lbl">Pareja 1</div>
+      <div class="pr-btn-sub">Recibirás los mensajes de tu pareja</div>
+    </div>
+    <div class="pr-btn" onclick="chooseRole('p2')">
+      <div class="pr-btn-ic">🌿</div>
+      <div class="pr-btn-lbl">Pareja 2</div>
+      <div class="pr-btn-sub">Recibirás los mensajes de tu pareja</div>
+    </div>
+  </div>
+</div>
+<div id="toast" class="toast" style="display:none">
+  <span style="font-size:18px;flex-shrink:0">💛</span>
+  <div><div style="font-family:'Playfair Display',serif;font-size:12px;font-weight:700;margin-bottom:3px">Aprecio recibido de tu pareja</div><div id="toast-t" style="font-size:11px;line-height:1.5"></div></div>
+  <button class="toast-x" onclick="hideToast()">×</button>
+</div>
+<div class="app" id="app" style="display:none">
+  <header class="hdr">
+    <div class="hdr-row">
+      <div><div class="b-lbl">Sistema Renacer</div><div class="b-ttl">Vínculo</div></div>
+      <div class="hdr-r">
+        <div class="cbadge" id="cbadge" onclick="changeCode()" title="Cambiar código">🔗 <span id="cbadge-t">—</span></div>
+        <div class="logo"><img src="Logo.png" alt="Logo"></div>
+      </div>
+    </div>
+    <div class="hdr-sub">Fortalecimiento de la Amistad</div>
+    <div class="tabs">
+      <button class="tab on" onclick="goTab('maps',this)"><span class="t-ic">🗺️</span><span class="t-lb">Mapas</span></button>
+      <button class="tab" onclick="goTab('adm',this)"><span class="t-ic">💛</span><span class="t-lb">Cariño</span></button>
+      <button class="tab" onclick="goTab('ratio',this)"><span class="t-ic">⚖️</span><span class="t-lb">Ratio</span></button>
+      <button class="tab" onclick="goTab('stress',this)"><span class="t-ic">🕊️</span><span class="t-lb">Estrés</span></button>
+    </div>
+  </header>
+  <main>
+    <div id="tab-maps" class="sec">
+      <div class="st"><div class="st-row"><span class="st-ic">🗺️</span><h2>Mapas del Amor</h2></div><p class="ssub">Conocer el mundo interior de tu pareja.</p><div class="ctx"><strong>¿Por qué es importante?</strong> Las parejas más conectadas son aquellas que conocen profundamente la vida interior del otro: sus sueños, miedos, valores y recuerdos.<br><br>Una persona hace la pregunta y la otra responde con honestidad. El objetivo es <em>conocerse mejor</em>.</div><div class="divx"><span></span></div></div>
+      <div class="prx"><span id="q-cnt">Pregunta 1 de 80</span><span id="q-pct">0%</span></div>
+      <div class="pw"><div class="pf" id="q-pf" style="width:0%"></div></div>
+      <div class="tr">
+        <div><div class="td" id="m-td">15:00</div><div class="tl">Tiempo de sesión</div></div>
+        <div style="display:flex;gap:8px"><button class="btn sm" id="m-tb" onclick="toggleMT()">Iniciar</button><button class="btn sm out" onclick="resetMT()">↺</button></div>
+      </div>
+      <div class="fw">
+        <div class="fc hid" id="fc" onclick="revealCard()">
+          <div id="fc-h"><div class="ci">💌</div><p class="ch">Toca para revelar la pregunta</p></div>
+          <div id="fc-r" style="display:none"><p class="cq" id="fc-t"></p></div>
+        </div>
+      </div>
+      <div id="skip-btn" style="text-align:center"><button class="btn out sm" onclick="skipCard()">Siguiente pregunta →</button></div>
+      <div class="qt" id="maps-qt" style="display:none"></div>
+    </div>
+    <div id="tab-adm" class="sec" style="display:none">
+      <div class="st"><div class="st-row"><span class="st-ic">💛</span><h2>Cariño y Admiración</h2></div><p class="ssub">La cuenta bancaria emocional de tu relación.</p><div class="ctx"><strong>¿Por qué es importante?</strong> Las parejas que expresan aprecio activo y específico construyen una reserva emocional que las protege en los momentos difíciles. No se trata de "te quiero" genérico — sino nombrar lo concreto.<br><br><strong>Notificación real:</strong> Al depositar, tu pareja recibe un push en su móvil con tu mensaje, aunque tenga la pantalla apagada.</div><div class="divx"><span></span></div></div>
+      <div class="card">
+        <p style="font-family:'Playfair Display',serif;font-size:15px;color:var(--cr);font-style:italic;text-align:center;line-height:1.7;margin-bottom:18px">"¿Qué cualidades de tu pareja has observado hoy?"</p>
+        <div id="qblocks"></div>
+        <div id="adm-sync" class="sync" style="display:none"><div class="spinx"></div><span>Enviando a tu pareja…</span></div>
+        <button class="btn w" id="save-btn" onclick="saveAdm()" disabled>Depositar en la cuenta emocional 💛</button>
+      </div>
+      <div id="adm-hist"></div>
+      <div class="qt" id="adm-qt"></div>
+    </div>
+    <div id="tab-ratio" class="sec" style="display:none">
+      <div class="st"><div class="st-row"><span class="st-ic">⚖️</span><h2>Ratio Mágico</h2></div><p class="ssub">El equilibrio entre lo positivo y lo negativo.</p><div class="ctx"><strong>¿Por qué es importante?</strong> Las parejas sanas mantienen al menos <strong>5 interacciones positivas por cada 1 negativa</strong>. No se trata de eliminar el conflicto, sino de asegurarse de que haya suficiente conexión positiva.<br><br><strong>Sincronizado en tiempo real:</strong> Este contador es compartido entre los dos dispositivos. Lo que marca uno lo ve el otro al instante.</div><div class="divx"><span></span></div></div>
+      <div class="card" style="text-align:center">
+        <div class="rn" id="rn" style="color:var(--cd)">1:1</div>
+        <div class="rs">Ratio actual · Meta: 5:1</div>
+        <div class="rbw"><div class="rbf" id="rbf" style="width:50%"></div><div class="rbm"></div></div>
+        <div class="rbl"><span>Negatividad</span><span>▲ Meta 5:1</span><span>Positividad</span></div>
+        <div class="rp a" id="rpill">→ Sigue sumando depósitos positivos</div>
+        <div class="cr2">
+          <div class="cn d"><div class="ci2">💚</div><div class="cnn d" id="dep-n">1</div><div class="cnl">Depósitos</div></div>
+          <div class="cn w"><div class="ci2">🔴</div><div class="cnn w" id="wit-n">1</div><div class="cnl">Retiros</div></div>
+        </div>
+        <div class="cbs"><button class="cb d" onclick="addRatio('d')">+ Depósito</button><button class="cb w" onclick="addRatio('w')">− Retiro</button></div>
+        <div id="ratio-sync" class="sync" style="display:none;padding-top:12px"><div class="spinx"></div><span>Sincronizando…</span></div>
+      </div>
+      <div class="card">
+        <div class="et" style="color:var(--gn)">💚 Ejemplos de depósitos positivos</div>
+        <div class="er"><span>🤗</span><span>Un abrazo espontáneo o un beso sin motivo</span></div>
+        <div class="er"><span>👂</span><span>Escuchar sin interrumpir ni dar consejos</span></div>
+        <div class="er"><span>😂</span><span>Reír juntos de algo cotidiano</span></div>
+        <div class="er"><span>🙏</span><span>Expresar gratitud por algo concreto</span></div>
+        <div class="er"><span>💬</span><span>Mostrar interés genuino por su día</span></div>
+        <div class="er"><span>✋</span><span>Un toque afectuoso al pasar</span></div>
+        <div class="er"><span>👀</span><span>Mantener contacto visual al hablar</span></div>
+        <div class="er"><span>🎁</span><span>Un detalle pequeño e inesperado</span></div>
+        <div class="er"><span>🤝</span><span>Validar su perspectiva aunque no estés de acuerdo</span></div>
+      </div>
+      <div class="card" style="margin-top:0">
+        <div class="et" style="color:var(--rl)">🔴 Ejemplos de retiros (negativos)</div>
+        <p style="font-size:11px;color:var(--cd);margin-bottom:12px;line-height:1.6">Registrarlos no es para juzgar, sino para tomar conciencia. Todos los tenemos.</p>
+        <div class="er"><span>🗣️</span><span>Criticar la persona, no el comportamiento</span></div>
+        <div class="er"><span>🙄</span><span>Poner los ojos en blanco o gesticular con desprecio</span></div>
+        <div class="er"><span>🚪</span><span>Cerrarse emocionalmente / "modo piedra"</span></div>
+        <div class="er"><span>📵</span><span>Ignorar un intento de conexión (seguir en el móvil)</span></div>
+        <div class="er"><span>⚡</span><span>Responder con defensividad ante una queja</span></div>
+        <div class="er"><span>😤</span><span>Usar el sarcasmo como respuesta</span></div>
+        <div class="er"><span>🔇</span><span>Interrumpir o cortar la conversación bruscamente</span></div>
+        <div class="er"><span>💬</span><span>Sacar temas del pasado en una discusión del presente</span></div>
+      </div>
+      <div class="qt" id="ratio-qt"></div>
+    </div>
+    <div id="tab-stress" class="sec" style="display:none">
+      <div class="st"><div class="st-row"><span class="st-ic">🕊️</span><h2>Conversación Anti-Estrés</h2></div><p class="ssub">Descargar tensiones sin que la relación las absorba.</p><div class="ctx"><strong>¿Por qué es importante?</strong> Cuando llevamos el estrés del trabajo a casa, a veces lo descargamos en la pareja sin darnos cuenta. Este ejercicio crea un espacio seguro: 15 minutos cada uno para hablar de sus tensiones, mientras el otro <em>escucha sin aconsejar</em>.</div><div class="divx"><span></span></div></div>
+      <div class="spr">
+        <div class="sp" id="sp1"><div class="sp-ic">🎤</div><div class="sp-nm">Pareja 1</div><div class="sp-rl">En espera</div></div>
+        <div class="sp" id="sp2"><div class="sp-ic">👂</div><div class="sp-nm">Pareja 2</div><div class="sp-rl">En espera</div></div>
+      </div>
+      <div class="card" style="text-align:center">
+        <div class="tcw">
+          <svg class="tcs" width="152" height="152" viewBox="0 0 152 152">
+            <circle cx="76" cy="76" r="68" fill="none" stroke="rgba(201,168,76,0.12)" stroke-width="6"/>
+            <circle cx="76" cy="76" r="68" fill="none" stroke="var(--go)" stroke-width="6" stroke-dasharray="427" stroke-dashoffset="427" stroke-linecap="round" id="tc-ring" style="transition:stroke-dashoffset .5s linear"/>
+          </svg>
+          <div class="tci"><div class="tct" id="tc-d">15:00</div><div class="tcu" id="tc-u">minutos</div></div>
+        </div>
+        <div id="st-done" class="done" style="display:none"><div class="done-ic">🎉</div><div class="done-t">¡Sesión completada!</div><button class="btn" onclick="resetStress()">Nueva sesión</button></div>
+        <div class="tcb" id="st-btns"><button class="btn" onclick="startStress()">Comenzar sesión</button></div>
+      </div>
+      <div class="card">
+        <h4 style="font-family:'Playfair Display',serif;color:var(--go);font-size:15px;margin-bottom:4px">💬 Chuleta de Empatía</h4>
+        <p style="font-size:11px;color:var(--cd);margin-bottom:14px">Frases para el/la oyente. Toca para rotar.</p>
+        <div class="ec" onclick="nextEmp()"><p class="ep" id="emp-p">"Entiendo cómo te sientes."</p><div class="eh" id="emp-h">1 / 8 — Toca para siguiente</div></div>
+        <div class="rule"><strong>Regla de oro:</strong> El oyente NO da consejos, NO critica y NO comparte sus propias experiencias durante el turno del otro.</div>
+      </div>
+      <div class="qt" id="stress-qt"></div>
+    </div>
+  </main>
+</div>
+<script>
+const QS=[{id:1,t:"¿Cuál es tu mayor sueño no realizado?",p:5},{id:2,t:"¿Qué te hace sentir más competente en la vida?",p:4},{id:3,t:"¿Cuál es tu recuerdo de infancia más feliz?",p:3},{id:4,t:"¿A quién admiras más y por qué?",p:3},{id:5,t:"¿Qué te da más miedo en este momento de tu vida?",p:5},{id:6,t:"¿Cuál es tu canción favorita de todos los tiempos?",p:2},{id:7,t:"¿Qué experiencia querrías vivir antes de morir?",p:5},{id:8,t:"¿Qué aspecto de tu trabajo te resulta más satisfactorio?",p:3},{id:9,t:"¿Quién fue la persona más influyente en tu infancia?",p:4},{id:10,t:"¿Cuál es tu mayor inseguridad personal?",p:5},{id:11,t:"¿Qué ritual diario te hace sentir más tú mismo/a?",p:3},{id:12,t:"¿Cómo te gusta que te muestren amor?",p:4},{id:13,t:"¿Qué aspecto de nuestra relación te hace más feliz?",p:5},{id:14,t:"¿Qué evento de tu pasado te marcó más profundamente?",p:5},{id:15,t:"¿Qué tipo de vejez imaginas para ti?",p:4},{id:16,t:"¿Cuál es tu mayor fuente de orgullo personal?",p:3},{id:17,t:"¿Qué te gustaría cambiar de tu infancia?",p:4},{id:18,t:"¿Cuál es tu libro o película favorita y por qué?",p:2},{id:19,t:"¿Qué valores son absolutamente innegociables para ti?",p:5},{id:20,t:"¿Cómo te sientes cuando estás bajo mucha presión?",p:4},{id:21,t:"¿Qué te avergüenza de ti mismo/a?",p:5},{id:22,t:"¿Qué quisieras que la gente dijera de ti cuando ya no estés?",p:5},{id:23,t:"¿Cuál fue el momento más difícil de tu vida hasta ahora?",p:5},{id:24,t:"¿Qué actividad te hace perder la noción del tiempo?",p:3},{id:25,t:"¿Cómo imaginas nuestra vida dentro de diez años?",p:5},{id:26,t:"¿Qué tradición familiar valoras más?",p:3},{id:27,t:"¿Qué cosa pequeña te alegra cada día?",p:2},{id:28,t:"¿En qué aspecto sientes que aún tienes mucho que aprender?",p:3},{id:29,t:"¿Qué es lo más valiente que has hecho en tu vida?",p:4},{id:30,t:"¿Qué parte de tu cuerpo te cuesta más aceptar?",p:4},{id:31,t:"¿Qué tipo de persona te resulta más difícil de tratar?",p:3},{id:32,t:"¿Qué te frustra más en una conversación?",p:3},{id:33,t:"¿Hay algo que siempre has querido aprender pero nunca has empezado?",p:3},{id:34,t:"¿Cómo te das cuenta de que estás feliz?",p:4},{id:35,t:"¿Qué parte de nuestra relación te gustaría que fuese diferente?",p:5},{id:36,t:"¿Cuál es el mayor regalo que te ha dado la vida?",p:4},{id:37,t:"¿Qué es lo que más agradeces de haberme conocido?",p:5},{id:38,t:"¿Qué imagen tienes de ti mismo/a de hace diez años?",p:3},{id:39,t:"¿Cuál ha sido tu mayor fracaso y qué aprendiste de él?",p:5},{id:40,t:"¿Qué sueño compartido te gustaría construir conmigo?",p:5},{id:41,t:"¿Cómo reaccionas cuando te sientes ignorado/a?",p:4},{id:42,t:"¿Qué necesitas cuando estás triste o angustiado/a?",p:5},{id:43,t:"¿Hay algún rencor que todavía cargas y que quisieras soltar?",p:5},{id:44,t:"¿Qué persona fuera de la familia te ha influido más?",p:3},{id:45,t:"¿Cuál es tu mayor ambición profesional?",p:4},{id:46,t:"¿Qué harías si supieras que no vas a fracasar?",p:5},{id:47,t:"¿Cuál es tu mayor talento que pocas personas conocen?",p:3},{id:48,t:"¿Qué es lo que más disfrutas de estar en pareja?",p:4},{id:49,t:"¿Qué te resulta más difícil de perdonar?",p:5},{id:50,t:"¿Cuándo te sientes más solo/a, incluso estando acompañado/a?",p:5},{id:51,t:"¿Qué lugar en el mundo sientes como tu hogar espiritual?",p:3},{id:52,t:"¿Qué conversación siempre pospones y sabes que debes tener?",p:5},{id:53,t:"¿Qué momento de nuestra relación guardarás siempre en tu memoria?",p:5},{id:54,t:"¿Qué cambiarías de la forma en que te criaron?",p:4},{id:55,t:"¿Cómo sabes que puedes confiar plenamente en alguien?",p:4},{id:56,t:"¿Qué aspecto de tu personalidad te cuesta más aceptar?",p:5},{id:57,t:"¿Hay algún sueño de infancia que todavía quieres cumplir?",p:4},{id:58,t:"¿Qué le dirías a tu yo de veinte años?",p:4},{id:59,t:"¿En qué momento de nuestra historia sentiste que me amabas más?",p:5},{id:60,t:"¿Qué significa para ti la palabra 'hogar'?",p:5},{id:61,t:"¿Cuál es la promesa que te haces cada año y nunca cumples?",p:4},{id:62,t:"¿Qué emoción te cuesta más expresar en voz alta?",p:5},{id:63,t:"¿Hay algo de nuestra primera época juntos que añoras?",p:4},{id:64,t:"¿Qué haces cuando necesitas recuperar la calma?",p:3},{id:65,t:"¿Qué es lo que más te preocupa de tu salud?",p:4},{id:66,t:"¿Cuál es la conversación más importante que hemos tenido como pareja?",p:5},{id:67,t:"¿Qué significa para ti el éxito en este momento de tu vida?",p:4},{id:68,t:"¿Cuándo fue la última vez que sentiste que te conocía de verdad?",p:5},{id:69,t:"¿Qué es lo que más te cuesta pedir ayuda para hacer?",p:4},{id:70,t:"¿Qué parte de tu historia familiar te pesa más?",p:5},{id:71,t:"¿Cómo imaginas tu vejez ideal?",p:4},{id:72,t:"¿Qué te da más vergüenza que otros sepan de ti?",p:5},{id:73,t:"¿Cuándo te sientes más conectado/a a mí?",p:5},{id:74,t:"¿Qué costumbre o hábito mío valoras especialmente?",p:3},{id:75,t:"¿Qué necesitarías para sentirte más seguro/a en nuestra relación?",p:5},{id:76,t:"¿Qué es lo que más me agradeces que haya hecho por ti?",p:5},{id:77,t:"¿Qué aprendiste de tu padre o madre que no quieres repetir?",p:5},{id:78,t:"¿Cuál es la experiencia de pareja de tus padres que más te marcó?",p:5},{id:79,t:"¿Qué harías diferente si pudieras volver a nuestro primer año juntos?",p:4},{id:80,t:"¿Qué es lo que más te asusta de perdernos el uno al otro?",p:5}];
+const EMPS=["Entiendo cómo te sientes.","Eso tiene todo el sentido.","Estoy completamente de tu lado.","Gracias por confiar esto a mí.","Eso debe haber sido muy difícil.","Te escucho. Sigue.","Tiene mucho sentido que te sintieras así.","¿Cómo puedo apoyarte ahora mismo?"];
+const QUOTES=["Una buena amistad es el mejor refugio contra la negatividad.","Las parejas que se conocen profundamente son más resilientes ante el conflicto.","El amor no es solo un sentimiento; es también una elección diaria.","Cada pequeño gesto de conexión construye el puente de vuelta el uno al otro.","El antídoto a la negatividad es la apreciación genuina y específica.","No es la ausencia de conflicto lo que define una relación sana, sino cómo se repara.","Las parejas felices no son aquellas sin problemas, sino las que se eligen el uno al otro cada día.","El mapa del amor de tu pareja es el territorio más importante que jamás explorarás."];
+const S={pc:null,role:null,deck:shuf([...QS]),idx:0,rev:false,mts:900,mton:false,mtint:null,ah:[],deps:1,wits:1,unsub:null,uadm:null,stp:'idle',stspk:1,stsec:900,stint:null,ei:0};
+function shuf(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+const OS_ID='3992a7f8-19ac-41b2-9db4-8b67f181f5da';
+const OS_KEY='os_v2_app_hgjkp6azvra3fhnurnt7dapv3l5mijqytlpuwong3px7s3ycg4zune6r4p52ojm55epqdcvcpriavnby3aejminqsx2k4hvvanbpiaq';
+function pref(){return window._fb.doc('parejas',S.pc);}
+async function initPair(c){const r=window._fb.doc('parejas',c),s=await window._fb.getDoc(r);if(!s.exists())await window._fb.setDoc(r,{deposits:1,withdrawals:1,admirationHistory:[],playerIds:[],createdAt:window._fb.serverTimestamp()});}
+function subRatio(){if(S.unsub)S.unsub();S.unsub=window._fb.onSnapshot(pref(),s=>{if(!s.exists())return;const d=s.data();S.deps=d.deposits??1;S.wits=d.withdrawals??1;renderRatio();});}
+function subAdm(){if(S.uadm)S.uadm();const field='admHistory_'+S.role;S.uadm=window._fb.onSnapshot(pref(),s=>{if(!s.exists())return;const h=s.data()[field]||[];if(h.length>S.ah.length&&S.ah.length>0){const n=h[0];if(n)showToast('Tu pareja aprecia de ti: '+n.qualities.map(q=>q.quality).join(', '));}S.ah=h;renderAdmHist();});}
+async function _savePlayerId(id){if(!S.pc||!id)return;try{await window._fb.updateDoc(pref(),{playerIds:window._fb.arrayUnion(id)});}catch(e){}}
+async function sendPush(msg){if(!S.pc)return;try{const s=await window._fb.getDoc(pref());if(!s.exists())return;const ids=s.data().playerIds||[];const mine=window._myPid;const t=mine?ids.filter(x=>x!==mine):ids;if(!t.length)return;fetch('/sendPush',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({playerIds:t,message:msg})});}catch(e){}}
+window.addEventListener('fbReady',()=>{const f=document.getElementById('ps-fb');f.style.opacity='1';document.getElementById('ps-fb-t').textContent='Firebase conectado ✓';const sv=localStorage.getItem('rn_pair');if(sv)document.getElementById('ps-in').value=sv;});
+async function doEnter(){const code=document.getElementById('ps-in').value.trim().toUpperCase();const err=document.getElementById('ps-err');if(code.length<3){err.textContent='El código debe tener al menos 3 caracteres.';return;}if(!window._fbReady){err.textContent='Conectando… inténtalo de nuevo.';return;}err.textContent='';try{await initPair(code);S.pc=code;window._pairCode=code;localStorage.setItem('rn_pair',code);if(window._myPid)await _savePlayerId(window._myPid);const savedRole=localStorage.getItem('rn_role_'+code);if(savedRole){S.role=savedRole;launchApp();}else{document.getElementById('ps').style.display='none';document.getElementById('pr').style.display='flex';}}catch(e){err.textContent='Error al conectar. Revisa tu conexión e inténtalo de nuevo.';console.error(e);}}
+function chooseRole(role){S.role=role;localStorage.setItem('rn_role_'+S.pc,role);document.getElementById('pr').style.display='none';launchApp();}
+function launchApp(){document.getElementById('ps').style.display='none';document.getElementById('pr').style.display='none';document.getElementById('app').style.display='block';document.getElementById('cbadge-t').textContent=S.pc;subRatio();subAdm();renderMaps();renderAdmForm();renderRatio();renderStress();setQt('maps-qt');setQt('adm-qt');setQt('ratio-qt');setQt('stress-qt');}
+function changeCode(){if(!confirm('¿Cambiar el código de pareja?'))return;if(S.unsub)S.unsub();if(S.uadm)S.uadm();S.pc=null;S.role=null;window._pairCode=null;localStorage.removeItem('rn_pair');document.getElementById('app').style.display='none';document.getElementById('ps').style.display='flex';}
+const TABS=['maps','adm','ratio','stress'];
+function goTab(id,btn){TABS.forEach(t=>document.getElementById('tab-'+t).style.display='none');document.querySelectorAll('.tab').forEach(b=>b.classList.remove('on'));document.getElementById('tab-'+id).style.display='block';btn.classList.add('on');if(id==='adm')renderAdmForm();if(id==='ratio')renderRatio();if(id==='stress')renderStress();if(id==='maps')renderMaps();}
+function setQt(id){const el=document.getElementById(id);if(!el)return;el.innerHTML=`<div class="qd">❝</div><p>${QUOTES[Math.floor(Math.random()*QUOTES.length)]}</p>`;el.style.display='block';}
+let _tt;
+function showToast(msg){clearTimeout(_tt);document.getElementById('toast-t').textContent=msg;const t=document.getElementById('toast');t.style.display='flex';t.style.animation='none';void t.offsetWidth;t.style.animation='drop .5s cubic-bezier(.34,1.56,.64,1) both';_tt=setTimeout(hideToast,5000);}
+function hideToast(){document.getElementById('toast').style.display='none';}
+function renderMaps(){const q=S.deck[S.idx],tot=S.deck.length,pct=Math.round((S.idx/tot)*100);document.getElementById('q-cnt').textContent=`Pregunta ${S.idx+1} de ${tot}`;document.getElementById('q-pf').style.width=pct+'%';document.getElementById('q-pct').textContent=pct+'%';document.getElementById('fc').className='fc '+(S.rev?'rev':'hid');document.getElementById('fc-h').style.display=S.rev?'none':'block';document.getElementById('fc-r').style.display=S.rev?'block':'none';document.getElementById('fc-t').textContent=`"${q.t}"`;document.getElementById('skip-btn').style.display='block';}
+function revealCard(){if(S.rev)return;S.rev=true;renderMaps();}
+function skipCard(){S.rev=false;advCard();}
+function advCard(){const fc=document.getElementById('fc');fc.classList.add('sr');setTimeout(()=>{S.idx=(S.idx+1)%S.deck.length;S.rev=false;renderMaps();},550);}
+function toggleMT(){if(S.mton){clearInterval(S.mtint);S.mton=false;document.getElementById('m-tb').textContent='Reanudar';}else{if(S.mts<=0)return;S.mton=true;document.getElementById('m-tb').textContent='Pausar';S.mtint=setInterval(()=>{S.mts--;updMT();if(S.mts<=0){clearInterval(S.mtint);S.mton=false;document.getElementById('m-tb').textContent='Tiempo agotado';document.getElementById('m-tb').disabled=true;}},1000);}}
+function resetMT(){clearInterval(S.mtint);S.mts=900;S.mton=false;document.getElementById('m-tb').textContent='Iniciar';document.getElementById('m-tb').disabled=false;updMT();}
+function updMT(){const mm=String(Math.floor(S.mts/60)).padStart(2,'0'),ss=String(S.mts%60).padStart(2,'0');const el=document.getElementById('m-td');el.textContent=`${mm}:${ss}`;el.className='td'+(S.mts<=60&&S.mts>0?' urg':'');}
+function renderAdmForm(){const w=document.getElementById('qblocks');w.innerHTML='';const d=document.createElement('div');d.className='qb';d.innerHTML=`<div class="qb-r"><div class="qn">💛</div><input class="qi" id="qi0" placeholder="" oninput="chkAdm()"></div><textarea class="mi" id="mi0" placeholder="" rows="2"></textarea>`;w.appendChild(d);document.getElementById('save-btn').disabled=true;renderAdmHist();setQt('adm-qt');}
+function chkAdm(){const ok=(document.getElementById('qi0')?.value||'').trim().length>0;document.getElementById('save-btn').disabled=!ok;}
+async function saveAdm(){const quality=(document.getElementById('qi0')?.value||'').trim();const moment=(document.getElementById('mi0')?.value||'').trim();const qs=[{quality,moment}];const entry={id:Date.now(),date:new Date().toLocaleDateString('es-ES'),qualities:qs};document.getElementById('adm-sync').style.display='flex';document.getElementById('save-btn').disabled=true;const destField='admHistory_'+(S.role==='p1'?'p2':'p1');try{const s=await window._fb.getDoc(pref());const ex=s.exists()?(s.data()[destField]||[]):[];await window._fb.updateDoc(pref(),{[destField]:[entry,...ex].slice(0,365)});await sendPush(`Tu pareja aprecia de ti: ${quality} 💛${moment ? '\n' + moment : ''}`);showToast('Depositado. Tu pareja recibirá la notificación ahora 💛');}catch(e){console.error(e);}document.getElementById('adm-sync').style.display='none';renderAdmForm();}
+function renderAdmHist(){const w=document.getElementById('adm-hist');if(!S.ah.length){w.innerHTML='';return;}let h=`<div class="hl">Historial de depósitos</div>`;S.ah.forEach(e=>{h+=`<div class="hc"><div class="hd">${e.date}</div><div class="pills">${e.qualities.map(q=>`<span class="pill">💛 ${q.quality}</span>`).join('')}</div></div>`;});w.innerHTML=h;}
+async function addRatio(type){if(type==='d')S.deps++;else S.wits++;document.getElementById('ratio-sync').style.display='flex';try{await window._fb.updateDoc(pref(),{deposits:S.deps,withdrawals:S.wits});}catch(e){console.error(e);}document.getElementById('ratio-sync').style.display='none';}
+function renderRatio(){const{deps,wits}=S,tot=deps+wits,ratio=wits===0?deps:deps/wits;document.getElementById('rn').textContent=wits===0?deps+':1':ratio.toFixed(1)+':1';const isG=ratio>=5,isA=ratio>=3&&ratio<5;document.getElementById('rn').style.color=isG?'var(--gn)':isA?'var(--go)':'var(--rl)';document.getElementById('rbf').style.width=(tot>0?(deps/tot)*100:50)+'%';document.getElementById('dep-n').textContent=deps;document.getElementById('wit-n').textContent=wits;const p=document.getElementById('rpill');if(isG){p.textContent='✓ EN ZONA VERDE — Relación floreciente';p.className='rp g';}else if(isA){p.textContent='→ Casi allí — Sigue sumando depósitos';p.className='rp a';}else{p.textContent='⚠ Necesitáis más momentos positivos';p.className='rp r';}setQt('ratio-qt');}
+const ST=900;
+function startStress(){S.stp='running';S.stspk=1;S.stsec=ST;renderStress();S.stint=setInterval(()=>{S.stsec--;if(S.stsec<=0){if(S.stspk===1){S.stspk=2;S.stsec=ST;}else{clearInterval(S.stint);S.stp='done';}}renderStress();},1000);}
+function switchSpk(){if(S.stp!=='running')return;clearInterval(S.stint);S.stspk=S.stspk===1?2:1;S.stsec=ST;S.stint=setInterval(()=>{S.stsec--;if(S.stsec<=0){if(S.stspk===1){S.stspk=2;S.stsec=ST;}else{clearInterval(S.stint);S.stp='done';}}renderStress();},1000);renderStress();}
+function stopStress(){clearInterval(S.stint);S.stp='idle';S.stsec=ST;renderStress();}
+function resetStress(){clearInterval(S.stint);S.stp='idle';S.stsec=ST;S.stspk=1;renderStress();}
+function nextEmp(){S.ei=(S.ei+1)%EMPS.length;document.getElementById('emp-p').textContent=`"${EMPS[S.ei]}"`;document.getElementById('emp-h').textContent=`${S.ei+1} / ${EMPS.length} — Toca para siguiente`;}
+function renderStress(){const{stp,stspk,stsec}=S,mm=String(Math.floor(stsec/60)).padStart(2,'0'),ss=String(stsec%60).padStart(2,'0');const td=document.getElementById('tc-d');td.textContent=`${mm}:${ss}`;td.className='tct'+(stp==='running'&&stsec<=60?' urg':stp==='running'?' on':'');document.getElementById('tc-u').textContent=stp==='running'?'restantes':'minutos';document.getElementById('tc-ring').style.strokeDashoffset=427*(stsec/ST);[1,2].forEach(n=>{const el=document.getElementById('sp'+n),on=stp==='running'&&stspk===n;el.className='sp'+(on?' on':'');el.querySelector('.sp-nm').className='sp-nm'+(on?' on':'');el.querySelector('.sp-rl').textContent=stp==='idle'?'En espera':stp==='running'?(stspk===n?'Habla':'Escucha'):'Completado';});const btns=document.getElementById('st-btns'),done=document.getElementById('st-done');if(stp==='done'){btns.style.display='none';done.style.display='block';}else if(stp==='idle'){done.style.display='none';btns.style.display='flex';btns.innerHTML=`<button class="btn" onclick="startStress()">Comenzar sesión</button>`;}else{done.style.display='none';btns.style.display='flex';btns.innerHTML=`<button class="btn out sm" onclick="switchSpk()">Cambiar turno →</button><button class="btn out sm" onclick="stopStress()">Detener</button>`;}setQt('stress-qt');}
+window.addEventListener('DOMContentLoaded',()=>{renderStress();const tryAuto=()=>{const sv=localStorage.getItem('rn_pair');if(sv&&window._fbReady){document.getElementById('ps-in').value=sv;const sr=localStorage.getItem('rn_role_'+sv);if(sr){S.pc=sv;S.role=sr;window._pairCode=sv;initPair(sv).then(()=>{if(window._myPid)_savePlayerId(window._myPid);launchApp();}).catch(()=>{});}}}; if(window._fbReady)tryAuto();else window.addEventListener('fbReady',tryAuto);});
+</script>
+</body>
+</html>
